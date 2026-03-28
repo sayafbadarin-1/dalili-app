@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>الموجه الأكاديمي الذكي</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 50px; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; resize: vertical; }
+        button { background-color: #28a745; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        .response-box { margin-top: 20px; padding: 15px; background-color: #e9ecef; border-radius: 5px; text-align: right; white-space: pre-wrap;}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>👨‍🏫 الموجه الأكاديمي الذكي</h2>
+        <p>اكتب مشكلتك الدراسية أو المادة التي تريد خطة لها:</p>
+        
+        <form method="POST">
+            <textarea name="message" placeholder="مثال: عندي امتحان رياضيات بكرة ومش عارف كيف أدرس..." required></textarea>
+            <br>
+            <button type="submit">اطلب الخطة الدراسية</button>
+        </form>
+
+        {% if response %}
+        <div class="response-box">
+            <h3>الخطة المقترحة:</h3>
+            <p>{{ response }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
