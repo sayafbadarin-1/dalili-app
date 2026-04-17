@@ -1,31 +1,43 @@
-from flask import Flask, render_template, request
-import requests
+from flask import Flask, request, jsonify, render_template
+import google.generativeai as genai
+import os
 
 app = Flask(__name__)
 
-# حط رابط الـ Production URL تبع الـ n8n هون
-N8N_WEBHOOK_URL = "https://sayafbd.app.n8n.cloud/webhook/e1f47c44-85e2-46d1-be84-094afb426652"
+# جلب المفتاح السري (رح نحطه في Vercel كمان شوي)
+API_KEY = os.environ.get("GEMINI_API_KEY")
+genai.configure(api_key=API_KEY)
 
-@app.route('/', methods=['GET', 'POST'])
+# إعداد البوت والتعليمات الصارمة (النظام الأمني والتوجيهي)
+system_instruction = """
+أنت 'دليلي'، موجه أكاديمي ذكي للطلاب.
+يجب عليك الالتزام بالقواعد التالية حرفياً:
+1. إذا سألك الطالب سؤالاً أكاديمياً أو طلب خطة دراسية: أعطه خطة دراسية عملية ومباشرة من 3 خطوات فقط، متبوعة باختبار قصير (Quiz) من 3 أسئلة للتأكد من فهمه.
+2. إذا سألك أي سؤال خارج نطاق التعليم والدراسة، أو استخدم كلمات غير لائقة: ارفض الإجابة بلطف وقل فقط: 'عذراً، أنا مخصص للمساعدة الأكاديمية والدراسية فقط. كيف يمكنني مساعدتك في دراستك اليوم؟'
+"""
+
+# تجهيز الموديل
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=system_instruction
+)
+
+@app.route('/')
 def index():
-    ai_response = None
-    
-    if request.method == 'POST':
-        # بناخذ رسالة الطالب من الفورم اللي بالموقع
-        student_msg = request.form.get('message')
-        
-        # بنجهزها وبنبعثها للـ n8n زي ما عملنا قبل شوي
-        data = {"student_message": student_msg}
-        try:
-            response = requests.post(N8N_WEBHOOK_URL, json=data)
-            ai_response = response.text  # هاد السطر السحري اللي كان ضايع!
-            ai_response = ai_response.replace('**', '')
-        except Exception as e:
-            print("سبب المشكلة:", e)  # ضيف هاد السطر
-            ai_response = "عذراً، صار في مشكلة بالاتصال مع الموجه الأكاديمي."
+    return render_template('index.html')
 
-    # بنعرض الصفحة وبنبعث الرد إذا موجود
-    return render_template('index.html', response=ai_response)
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_message = request.json.get('message')
+    if not user_message:
+        return jsonify({"response": "يرجى كتابة رسالة."})
+        
+    try:
+        # إرسال رسالة الطالب لـ Gemini
+        response = model.generate_content(user_message)
+        return jsonify({"response": response.text})
+    except Exception as e:
+        return jsonify({"response": "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى."})
 
 if __name__ == '__main__':
     app.run(debug=True)
